@@ -22,14 +22,17 @@ Lastly, reporting of the rho values should have been done in the table for every
 
 3.  Since these estimates are not robust as shown by sensitivity analyses, associations could be explained by residual exposure-outcome confounding, as shown and explained with the accompanying DAGs and the local test results showing that several of the conditional independencies do not hold in the sample dataset:
 
-![Local tests plot results of the reconstructed DAG based on the assumptions reported in the paper. All confidence intervals that include 0 meet the conditional independecies assumption, whereas those that do not include the null would not meet this assumption. These suggest that adjustment for confounding in the paper could have been suboptimal.](mediation/results/output_figures/conditional_independencies_original.png)
+![Local tests plot original](mediation/results/output_figures/conditional_independencies_original.png)
+*Figure description: Local tests plot results of the reconstructed DAG based on the assumptions reported in the paper. All confidence intervals that include 0 meet the conditional independecies assumption, whereas those that do not include the null would not meet this assumption. These suggest that adjustment for confounding in the paper could have been suboptimal*
 
 The assumptions in this DAG were updated to model with IPW. Here I show that after updating, the conditional independence assumption is consistent with the relationships found in the dataset:
 
-![Local tests plot results of the updated DAG.](mediation/results/output_figures/conditional_independencies_updated.png)
+![Local tests plot rupdated](mediation/results/output_figures/conditional_independencies_updated.png)
+*Figure description: Local tests plot results of the updated DAG.*
 
 4.  The models with the continuous mediator *AHMI* were modelled with inverse probability weighting to estimate the bootstrap 95% confidence interval of proportion mediated while accounting for shared exposure-outcome and mediator-outcome confounding, showing that the estimates provided in the paper could be exagerated. Furthermore, all confidence intervals include 0 which would mean that it is possible that none of the effect of exposures on respiratory health is mediated by the microbiome. These results are shown in the following plot:
 
-![Proportion of the effect of exposures on respiratory health mediated by the microbiome. The red bars represent the 95% confidence interval of the proportion mediated.](mediation/results/output_figures/Proportion_mediated.png)
+![Proportion mediateed 95%CI](mediation/results/output_figures/Proportion_mediated.png)
+*Figure description: Proportion of the effect of exposures on respiratory health mediated by the microbiome. The red bars represent the 95% confidence interval of the proportion mediated.*
 
 These analyses could be reproduced in the complete dataset. Code would need to be adapted to account for the effect of district.
