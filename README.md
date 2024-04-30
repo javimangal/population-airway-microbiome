@@ -1,6 +1,6 @@
 # Description
 
-This repository builds upon the original [population_airway_microbiome repository](https://github.com/wangzlab/population_airway_microbiome). All original files have been preserved in the original structure of the repository and all new work has been created under the directory [mediation](/mediation), which contains a [power point presentation](mediation/2024-04-12_Seminar-Mediation-Javier.pptx) with a summary of the main criticisms raised after reviewing the [associated original research article](https://pubmed.ncbi.nlm.nih.gov/37349537/), which concern specifically to the mediation analyses reported in the paper. The [mediation_IPW.qmd](mediation/mediation_IPW.qmd) is the main code file that should be opened to reproduce analyses; scripts are sourced into this file, reason why individual scripts are not ment to be ran independently, but should be sourced into the workflow of the qmd file. 
+This repository builds upon the original [population_airway_microbiome repository](https://github.com/wangzlab/population_airway_microbiome). All original files have been preserved in the original structure of the repository and all new work has been created under the directory [mediation](/mediation), which contains a [power point presentation](mediation/2024-04-12_Seminar-Mediation-Javier.pptx) with a summary of the main criticisms raised after reviewing the [associated original research article](https://pubmed.ncbi.nlm.nih.gov/37349537/), which concern specifically to the mediation analyses reported in the paper. The [mediation_IPW.qmd](mediation/mediation_IPW.qmd) is the main code file that should be opened to reproduce analyses; scripts are sourced into this file, reason why individual scripts are not meant to be ran independently, but should be sourced into the workflow of the qmd file. 
 
 # Procedure
 
@@ -36,3 +36,9 @@ The assumptions in this DAG were updated to model with IPW. Here I show that aft
 *Figure description: Proportion of the effect of exposures on respiratory health mediated by the microbiome. The red bars represent the 95% confidence interval of the proportion mediated.*
 
 These analyses could be reproduced in the complete dataset. Code would need to be adapted to account for the effect of district.
+
+# Additional criticisms 
+
+Studying mediation in the context of this study through causal inference methods could not be appropriate due to violation of the [no-interference assumption](https://doi.org/10.1198%2F016214508000000292) as it is conceivable that microbial features, including bacteria and fungi are transmitted between individuals. 
+
+Another issue is that the authors provide evidence for interaction between the exposures and mediators. Therefore, [4-way decomposition](https://pubmed.ncbi.nlm.nih.gov/25000145/) may be needed to reliably estimate mediation in the context of this study. 
