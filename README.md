@@ -12,7 +12,7 @@ Directed acyclic graphs (DAG) were reconstructed based on the assumptions report
 
 1.  When selecting smoking as the exposure of interest, the total sum of proportion mediation was 3.836, which largely exceeds 1. Said in a different way, the total sum of proportion mediated should not be higher than 100%, but for smoking, mediation by microbial features is allegedly 383.6%.
 
-2.  The authors report in the research article that their estimates for proportion mediation are "relatively robust" according to rho values in sensitivity analyses (rho = 0.117, sd = 0.027). Nonetheless, in the paper by Chi et al, a rho value in *medsens* analyses is said to:
+2.  The authors report in the research article that their estimates for proportion mediation are "relatively robust" according to rho values in sensitivity analyses (rho = 0.117, sd = 0.027). Nonetheless, in the paper by [Chi et al](https://www.frontiersin.org/articles/10.3389/feduc.2022.886722/full), a rho value in *medsens* analyses is said to:
 
     > “ρ value is 0.1, indicating that the true ACME would not be significantly different from zero if there exist an unobserved confounder that causes a small correlation between errors for the mediator and the outcome models.”
 
