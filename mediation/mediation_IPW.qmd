@@ -1,0 +1,544 @@
+---
+title: "Reproducibility of paper:"
+subtitle: "Lin, L., Yi, X., Liu, H. et al. The airway microbiome mediates the interaction between environmental exposure and respiratory health in humans. Nat Med 29, 1750–1759 (2023)."
+author: "Javier Mancilla Galindo"
+date: "`r Sys.Date()`"
+execute: 
+  echo: false
+  warning: false
+toc: true
+toc_float: true
+format:
+  pdf:
+    documentclass: scrartcl
+editor: visual
+---
+
+\pagebreak
+
+
+#### Packages used
+
+```{r}
+#| echo: true
+#| message: false
+if (!require("pacman", quietly = TRUE)) {
+  install.packages("pacman")
+}
+
+pacman::p_load(
+  tidyverse, # Used for basic data handling and visualization.
+  dagitty, #Used in conjunction with https://www.dagitty.net/ to create 
+  #directed acyclic graph to inform statistical modelling.  
+  lavaan, #Used to create correlation matrix to assess conditional independencies.  
+  CBPS, #Used to calculate non-parametric propensity scores for IPW.
+  WeightIt, #Used to calculate inverse probability weights.
+  boot # Calculate bootstrap confidence intervals. 
+)
+```
+
+##### Session and package dependencies
+
+```{r}
+session <- sessionInfo()
+session$BLAS <- NULL
+session$LAPACK <- NULL
+session$loadedOnly <- NULL
+
+session
+```
+
+```{r}
+#| include: false
+
+# Create directories for sub-folders 
+figfolder <- "../mediation/results/output_figures"
+dir.create(figfolder, showWarnings = FALSE)
+```
+
+```{r}
+#| include: false
+
+# load data 
+load("../data/meta_phenotypes.RData")
+
+AMHI <- read.delim("../AMHI calculation Figure 4/AMHI.txt")
+
+Health <- read.delim("../data/meta_airwayHealth_overallHealth.txt")
+
+## Merge dataframes   
+meta <- merge(meta.cat, meta.num, by="SampleID")
+
+meta <- merge(meta, Health, by.x = "SampleID", by.y = "X.NAME")
+
+data <- merge(meta, AMHI, by="SampleID")
+```
+
+\pagebreak
+
+The summary of criticisms to the paper and rationale for the following analyses are summarized in the [powerpoint presentation](mediation/2024-04-12_Seminar-Mediation-Javier.pptx) contained in the *mediation* directory.
+
+## DAG
+
+The following directed acyclic graph (DAG) was reconstructed based on assumptions available in the paper for the construction of regression models in mediation analyses, by using the [DAGitty website](https://www.dagitty.net/). THe DAG is saved and sourced from the accompanying script ***DAG.r***
+
+```{r}
+# load Directed Acyclic Graph ============================================
+
+source("scripts/DAG.r")
+plot(DAG)
+```
+
+## Testing of conditional independencies in DAG:
+
+This procedure was performed as suggested in [this article](https://doi.org/10.1002/cpz1.45).
+
+Implied conditional independencies:
+
+```{r}
+impliedConditionalIndependencies(DAG)
+```
+
+```{r}
+source("scripts/correlation_matrix.r")
+```
+
+```{r}
+correlations
+```
+
+```{r}
+localtests <- localTests(
+  DAG, 
+  sample.cov = correlations,
+  sample.nobs=nrow( subsetcondit ) 
+  )
+
+localtests
+```
+
+Local tests results plot:
+
+```{r}
+#| include: false
+png(filename=paste0(figfolder,"/conditional_independencies_original.png"),
+    width=8, height=5, units="in", res=300)
+plotLocalTestResults(localtests)
+dev.off()
+```
+
+```{r}
+plotLocalTestResults(localtests)
+```
+
+I updated the DAG according to the procedure described by [Ankan, 2021](https://currentprotocols.onlinelibrary.wiley.com/doi/full/10.1002/cpz1.45).
+
+```{r}
+source("scripts/updated_DAG.r")
+plot(DAG_updated)
+```
+
+```{r}
+localtests <- localTests(
+  DAG_updated, 
+  sample.cov = correlations,
+  sample.nobs=nrow( subsetcondit ) 
+  )
+
+localtests
+```
+
+Local tests results plot:
+
+```{r}
+#| include: false
+png(filename=paste0(figfolder,"/conditional_independencies_updated.png"),
+    width=8, height=5, units="in", res=300)
+plotLocalTestResults(localtests)
+dev.off()
+```
+
+```{r}
+plotLocalTestResults(localtests)
+```
+
+```{r}
+#| include: false 
+rm(DAG,DAG_updated,correlations,localtests)
+```
+
+\pagebreak
+
+# Biofuel
+
+```{r}
+biofuel <- subsetcondit %>% mutate_at(
+    c("Biofuel_exposure",
+      "Occupational_pollution",
+      "Smoking_binary",
+      "SHS_binary",
+      "Medication",
+      "Gender"),
+    factor
+  )
+```
+
+### Inverse probability weights
+
+Weights for exposure:
+
+```{r}
+biofuel$weight1 <- weightit(
+  Biofuel_exposure ~ BMI + Medication + Age + Gender + Occupational_pollution,
+  biofuel, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Weights for mediator:
+
+```{r}
+biofuel$weight2 <- weightit(
+  AMHI ~ BMI + Medication + Age + Gender + Biofuel_exposure +
+    Occupational_pollution + Smoking_binary + SHS_binary + year2pm25,
+  biofuel, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Overall weight:
+
+```{r}
+biofuel <- biofuel %>% 
+  mutate(
+  weight = weight1*weight2
+  )
+```
+
+Confidence interval
+
+```{r}
+#| warning: false
+source("scripts/confidence_intervals_biofuel.r")
+conf_interval
+```
+
+```{r}
+biofuel_ci_lower <- ifelse(conf_interval$percent[1,4] < 0, 0, conf_interval$percent[1,4])
+biofuel_ci_upper <- ifelse(conf_interval$percent[1,5] > 100, 0, conf_interval$percent[1,5])
+```
+
+# Occupational pollution
+
+```{r}
+occupational <- subsetcondit %>% mutate_at(
+    c("Biofuel_exposure",
+      "Occupational_pollution",
+      "Smoking_binary",
+      "SHS_binary",
+      "Medication",
+      "Gender"),
+    factor
+  )
+```
+
+### Inverse probability weights
+
+Weights for exposure:
+
+```{r}
+occupational$weight1 <- weightit(
+  Occupational_pollution ~ BMI + Medication + Age + Gender,
+  occupational, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Weights for mediator:
+
+```{r}
+occupational$weight2 <- weightit(
+  AMHI ~ BMI + Medication + Age + Gender + Biofuel_exposure +
+    Occupational_pollution + Smoking_binary + SHS_binary + year2pm25,
+  occupational, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Overall weight:
+
+```{r}
+occupational <- occupational %>% 
+  mutate(
+  weight = weight1*weight2
+  )
+```
+
+Confidence interval
+
+```{r}
+#| warning: false
+source("scripts/confidence_intervals_occupational.r")
+conf_interval
+```
+
+```{r}
+occupational_ci_lower <- ifelse(conf_interval$percent[1,4] < 0, 0, conf_interval$percent[1,4])
+occupational_ci_upper <- ifelse(conf_interval$percent[1,5] > 100, 0, conf_interval$percent[1,5])
+```
+
+# PM 2.5
+
+```{r}
+pm25 <- subsetcondit %>% mutate_at(
+    c("Biofuel_exposure",
+      "Occupational_pollution",
+      "Smoking_binary",
+      "SHS_binary",
+      "Medication",
+      "Gender"),
+    factor
+  )
+```
+
+### Inverse probability weights
+
+Weights for exposure:
+
+```{r}
+pm25$weight1 <- weightit(
+  year2pm25 ~ BMI + Medication + Age + Gender + Smoking_binary + Biofuel_exposure +
+    Occupational_pollution,
+  pm25, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Weights for mediator:
+
+```{r}
+pm25$weight2 <- weightit(
+  AMHI ~ BMI + Medication + Age + Gender + Biofuel_exposure +
+    Occupational_pollution + Smoking_binary + SHS_binary + year2pm25,
+  pm25, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Overall weight:
+
+```{r}
+pm25 <- pm25 %>% 
+  mutate(
+  weight = weight1*weight2
+  )
+```
+
+Confidence interval
+
+```{r}
+#| warning: false
+source("scripts/confidence_intervals_pm25.r")
+conf_interval
+```
+
+```{r}
+pm25_ci_lower <- ifelse(conf_interval$percent[1,4] < 0, 0, conf_interval$percent[1,4])
+pm25_ci_upper <- ifelse(conf_interval$percent[1,5] > 100, 0, conf_interval$percent[1,5])
+```
+
+# Smoking
+
+```{r}
+smoking <- subsetcondit %>% mutate_at(
+    c("Biofuel_exposure",
+      "Occupational_pollution",
+      "Smoking_binary",
+      "SHS_binary",
+      "Medication",
+      "Gender"),
+    factor
+  )
+```
+
+### Inverse probability weights
+
+Weights for exposure:
+
+```{r}
+smoking$weight1 <- weightit(
+  Smoking_binary ~ BMI + Medication + Age + Gender + Biofuel_exposure + 
+    Occupational_pollution,
+  smoking, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Weights for mediator:
+
+```{r}
+smoking$weight2 <- weightit(
+  AMHI ~ BMI + Medication + Age + Gender + Biofuel_exposure +
+    Occupational_pollution + Smoking_binary + SHS_binary + year2pm25,
+  smoking, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Overall weight:
+
+```{r}
+smoking <- smoking %>% 
+  mutate(
+  weight = weight1*weight2
+  )
+```
+
+Confidence interval
+
+```{r}
+#| warning: false
+source("scripts/confidence_intervals_smoking.r")
+conf_interval
+```
+
+```{r}
+smoking_ci_lower <- ifelse(conf_interval$percent[1,4] < 0, 0, conf_interval$percent[1,4])
+smoking_ci_upper <- ifelse(conf_interval$percent[1,5] > 100, 0, conf_interval$percent[1,5])
+```
+
+# Second hand smoking
+
+```{r}
+second_hand_smoking <- subsetcondit %>% mutate_at(
+    c("Biofuel_exposure",
+      "Occupational_pollution",
+      "Smoking_binary",
+      "SHS_binary",
+      "Medication",
+      "Gender"),
+    factor
+  )
+```
+
+### Inverse probability weights
+
+Weights for exposure:
+
+```{r}
+second_hand_smoking$weight1 <- weightit(
+  SHS_binary ~ BMI + Medication + Age + Gender + Biofuel_exposure + 
+    Occupational_pollution + Smoking_binary,
+  second_hand_smoking, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Weights for mediator:
+
+```{r}
+second_hand_smoking$weight2 <- weightit(
+  AMHI ~ BMI + Medication + Age + Gender + Biofuel_exposure +
+    Occupational_pollution + Smoking_binary + SHS_binary + year2pm25,
+  second_hand_smoking, 
+  method = "npcbps",
+  over = FALSE)$weights
+```
+
+Overall weight:
+
+```{r}
+second_hand_smoking <- second_hand_smoking %>% 
+  mutate(
+  weight = weight1*weight2
+  )
+```
+
+Confidence interval
+
+```{r}
+#| warning: false
+source("scripts/confidence_intervals_second_hand_smoking.r")
+conf_interval
+```
+
+```{r}
+sh_smoking_ci_lower <- ifelse(conf_interval$percent[1,4] < 0, 0, conf_interval$percent[1,4])
+sh_smoking_ci_upper <- ifelse(conf_interval$percent[1,5] > 100, 0, conf_interval$percent[1,5])
+```
+
+# Table results
+
+```{r}
+table_results <- data.frame(
+  Exposure = factor(1:5, labels=c(
+    "Biofuel_exposure",
+    "Occupational_pollution",
+    "PM25",
+    "Smoking",
+    "Secondhand_smoking")
+    ),
+  ci_lower = c(
+    biofuel_ci_lower,
+    occupational_ci_lower,
+    pm25_ci_lower,
+    smoking_ci_lower,
+    sh_smoking_ci_lower
+  ),
+  ci_upper = c(
+    biofuel_ci_upper,
+    occupational_ci_upper,
+    pm25_ci_upper,
+    smoking_ci_upper,
+    sh_smoking_ci_upper
+  ),
+  confidence_interval = c(
+    paste0(biofuel_ci_lower,", ",round(biofuel_ci_upper,2)),
+    paste0(occupational_ci_lower,", ",round(occupational_ci_upper,2)),
+    paste0(pm25_ci_lower,", ",round(pm25_ci_upper,2)),
+    paste0(smoking_ci_lower,", ",round(smoking_ci_upper,2)),
+    paste0(sh_smoking_ci_lower,", ",round(sh_smoking_ci_upper,2))
+  )
+) %>% mutate(Exposure = fct_rev(Exposure))
+
+table_results 
+```
+
+```{r}
+ggplot(
+  table_results, 
+  aes(x=Exposure)
+  ) +  
+  geom_linerange(
+    aes(ymin = ci_lower, ymax = ci_upper),
+    colour = "firebrick3",
+    size = 2
+      ) +
+  ylim(c(0,100)) + 
+  ylab("Proportion mediated (%)") + 
+  coord_flip() +
+  theme_bw() + 
+  theme(panel.border = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(size=rel(1.2)), 
+        axis.text.y = element_text(size=rel(1.2))
+  )
+```
+
+```{r}
+ggsave("Proportion_mediated.png",
+       path = figfolder,
+       width = 6, height = 4, units = "in", dpi = 300
+)
+```
+
+\pagebreak
+
+```{r}
+#| include: false
+
+# Run this chunk if you wish to clear your environment and unload packages.
+
+pacman::p_unload(negate = TRUE)
+```
