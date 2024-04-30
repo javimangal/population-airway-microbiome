@@ -1,6 +1,6 @@
 # Description
 
-This repository builds upon the original [population_airway_microbiome repository](https://github.com/wangzlab/population_airway_microbiome). All original files have been preserved in the original structure of the repository and all new work has been created under the directory [mediation](/mediation), which contains a [power point presentation](mediation/2024-04-12_Seminar-Mediation-Javier.pptx) with a summary of the main criticisms raised after reviewing the [associated original research article](https://pubmed.ncbi.nlm.nih.gov/37349537/), which concern specifically to the mediation analyses reported in the paper.
+This repository builds upon the original [population_airway_microbiome repository](https://github.com/wangzlab/population_airway_microbiome). All original files have been preserved in the original structure of the repository and all new work has been created under the directory [mediation](/mediation), which contains a [power point presentation](mediation/2024-04-12_Seminar-Mediation-Javier.pptx) with a summary of the main criticisms raised after reviewing the [associated original research article](https://pubmed.ncbi.nlm.nih.gov/37349537/), which concern specifically to the mediation analyses reported in the paper. The [mediation_IPW.qmd](mediation/mediation_IPW.qmd) is the main code file that should be opened to reproduce analyses; scripts are sourced into this file, reason why individual scripts are not ment to be ran independently, but should be sourced into the workflow of the qmd file. 
 
 # Procedure
 
