@@ -1,6 +1,6 @@
 cff-version: 1.0.0
 message: "If you use this material, please cite it as below."
-title: "Indoor dust microbiota composition and allergic diseases: a scoping review"
+title: "Comment and reanalysis of: The multi-kingdom airway microbiome mediates the interaction between environmental exposure and respiratory health"
 authors:
   - family-names: Mancilla Galindo
     given-names: Javier
@@ -11,13 +11,9 @@ identifiers:
     description: The concept DOI for the collection of these materials.
 repository-code: "https://github.com/javimangal/population-airway-microbiome"
 keywords:
-  - Microbiota
-  - Dust
-  - Built Environment
-  - Home Environment
-  - Causality
-  - Allergy and Immunology
-  - Indoor 
+  - microbiota
+  - mediation
+  - causal-inference
 license: Apache-2.0
 version: 1.0.0
 date-released: 2024-04-30
