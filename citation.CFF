@@ -1,0 +1,23 @@
+cff-version: 1.0.0
+message: "If you use this material, please cite it as below."
+title: "Indoor dust microbiota composition and allergic diseases: a scoping review"
+authors:
+  - family-names: Mancilla Galindo
+    given-names: Javier
+    orcid: https://orcid.org/0000-0002-0718-467X
+identifiers:
+  - type: doi
+    value: PENDING
+    description: The concept DOI for the collection of these materials.
+repository-code: "https://github.com/javimangal/population-airway-microbiome"
+keywords:
+  - Microbiota
+  - Dust
+  - Built Environment
+  - Home Environment
+  - Causality
+  - Allergy and Immunology
+  - Indoor 
+license: Apache-2.0
+version: 1.0.0
+date-released: 2024-04-30
